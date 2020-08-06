@@ -1,0 +1,10 @@
+{
+    "name": "moodle-atto_fablib-button",
+    "builds": {
+        "moodle-atto_fablib-button": {
+            "jsfiles": [
+                "button.js"
+            ]
+        }
+    }
+}
