@@ -32,8 +32,10 @@
  */
 
 var CSS = {
+    ADDFILE: 'atto_fablib_addmore_files',
     CLOSE: 'atto_fablib_close',
     RESPONSIVE: 'img-responsive',
+    INPUTADDFILE: 'atto_fablib_addfile',
     INPUTALIGNMENT: 'atto_fablib_bannerimage_alignment',
     INPUTALT: 'atto_fablib_bannerimage_altentry',
     INPUTHEIGHT: 'atto_fablib_bannerimage_heightentry',
@@ -629,14 +631,15 @@ var CSS = {
         '</div>' +
         '<div id="leftAccordionCollapseFive" class="collapse show" aria-labelledby="leftAccordionHeadingFive" data-parent="#leftAccordion">' +
         '<div class="card-body">' +
-        '<div clas="container">' +
-        '<div class="row">' +
-        '<div class="col-12 form-group">' +
-        '<label for="filesTextArea">{{get_string "help_files" component}}</label>' +
-        '<label><i>{{get_string "example_files" component}}</i></label>' +
-        '<textarea class="form-control" id="filesTextArea" rows="3"></textarea>' +
+        '<div id="filesContainer" class="container">' +
+
+        '<div class="row {{CSS.ADDFILE}}">' +
+        '<div class="col-12">'+
+            '<button class="btn btn-secondary {{CSS.INPUTADDFILE}}" type="button">' + '' +
+                '{{get_string "addfile" component}}</button>' +
         '</div>' +
         '</div>' +
+
         '</div>' +
         '</div>' +
         '</div>' +
@@ -884,7 +887,7 @@ var CSS = {
         'width="100%"' +
         'class="fablib_bannerimage mlang_{{lang}}"' +
         '{{#if id}}id="{{id}}" {{/if}}' +
-        '/><br>',
+        '/><br><p></p>',
 
     COLUMNHEADERTEMPLATE = '' +
         '<div class="mlang_{{lang}} icon-col col-md-2 col-sm-3 col-xs-6">' +
@@ -1001,6 +1004,14 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
      */
     _currentLanguageSelector: null,
 
+    /**
+     * The number of files for the current selected language in the form of the dialogue
+     * 
+     * @param _numberOfFiles
+     * @type Number
+     * @private
+     */
+    _numberOfFiles: 0,
 
     initializer: function () {
 
@@ -1040,7 +1051,7 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
         host.saveSelection();
         e = e._event;
 
-        var languageCode = this._attoform.one('#language').get('value');
+        var languageCode = self._attoform.one('#language').get('value');
 
         // Only handle the event if an image file was dropped in.
         var handlesDataTransfer = (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length);
@@ -1190,6 +1201,8 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
         // Set the dialogue content, and then show the dialogue.
         dialogue.set('bodyContent', this._getDialogueContent())
             .show();
+
+        this._setFiles();
     },
 
     /**
@@ -1282,7 +1295,76 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
             }, '.atto_fablib_bannerimage_openimagebrowser', this);
         }
 
+        this._attoform.one('.' + CSS.INPUTADDFILE).on('click', this._getAddFile(this._attoform, CSS, COMPONENTNAME, this), this);
+
         return content;
+    },
+
+    _getAddFile: function(element, CSS, COMPONENTNAME, context) {
+        return function() {
+    
+            context._numberOfFiles = context._numberOfFiles + 1;
+            var i = context._numberOfFiles;
+    
+            var NEW_TEMPLATE = 
+            // File name
+            '<div class="row fablib-file-item">' +
+            '<div class="col-12 form-group">' +
+            '<label for="fileNameTextArea-'+i+'">{{get_string "help_files" component}}</label>' +
+            '<textarea class="form-control" id="fileNameTextArea-' + i +  '" rows="1"></textarea>' +
+            '</div>' +
+            '</div>' +
+
+            // File url
+            '<div class="row fablib-file-item">' +
+            '<div class="col-12 form-group">' +
+            '<label for="fileUrlTextArea-'+i+'">{{get_string "help_files_url" component}}</label>' +
+            '<textarea class="form-control" id="fileUrlTextArea-' + i +  '" rows="1"></textarea>' +
+            '</div>' +
+            '</div>';
+    
+            var template = Y.Handlebars.compile(NEW_TEMPLATE),
+             new_content = Y.Node.create(template({
+              elementid: 'fablib_files',
+              CSS: CSS,
+              component: COMPONENTNAME,
+            }));
+    
+            element.insert(new_content, Y.one('#filesContainer'));
+        };
+    },
+
+    _addFile: function(CSS, COMPONENTNAME, fileName, fileUrl){
+        this._numberOfFiles = this._numberOfFiles + 1;
+        var i = this._numberOfFiles;
+        
+        var NEW_TEMPLATE = 
+        // File name
+        '<div class="row fablib-file-item">' +
+        '<div class="col-12 form-group">' +
+        '<label for="fileNameTextArea-'+i+'">{{get_string "help_files" component}}</label>' +
+        '<textarea class="form-control" id="fileNameTextArea-' + i +  '" rows="1">{{file_name}}</textarea>' +
+        '</div>' +
+        '</div>' +
+
+        // File url
+        '<div class="row fablib-file-item">' +
+        '<div class="col-12 form-group">' +
+        '<label for="fileUrlTextArea-'+i+'">{{get_string "help_files_url" component}}</label>' +
+        '<textarea class="form-control" id="fileUrlTextArea-' + i +  '" rows="1">{{file_url}}</textarea>' +
+        '</div>' +
+        '</div>';
+
+        var template = Y.Handlebars.compile(NEW_TEMPLATE),
+            new_content = Y.Node.create(template({
+                elementid: 'fablib_files',
+                CSS: CSS,
+                component: COMPONENTNAME,
+                file_name: fileName,
+                file_url: fileUrl
+            }));
+
+        this._attoform.insert(new_content, Y.one('#filesContainer'));
     },
 
     /**
@@ -1604,30 +1686,15 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
             // banner image
             var imagehtml = this._setImage();
 
-            // 
-            temp = this._appendTitle('', 'duration');
-            var duration = this._appendDuration(temp);
+            var duration = this._appendDuration();
+            var difficulty = this._appendDifficulty();
+            var machines = this._appendMachines();
+            var materials = this._appendMaterials();
+            var files = this._appendFiles();
+            var credits = this._appendCredits();
 
-            temp = this._appendTitle('', 'difficulty');
-            var difficulty = this._appendDifficulty(temp);
-
-            temp = this._appendTitle('', 'machines');
-            var machines = this._appendMachines(temp);
-
-            temp = this._appendTitle('', 'materials');
-            var materials = this._appendMaterials(temp);
-
-            temp = this._appendTitle('', 'files');
-            var files = this._appendFiles(temp);
-
-            temp = this._appendTitle('', 'credits');
-            var credits = this._appendCredits(temp);
-
-            temp = this._appendTitle('', 'introduction');
-            var introduction = this._appendIntroduction(temp);
-            
-            temp = this._appendTitle('', 'safety');
-            var safety = this._appendSafety(temp);
+            var introduction = this._appendIntroduction();
+            var safety = this._appendSafety();
 
             temp = this._appendTitle('', 'sdg');
             var sdg = this._appendIcons(temp, SDG);
@@ -1659,10 +1726,10 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
             var editorContent = this.editor.children;
             if (this.get('host').selectionFilterMatches('.contentwrapper', editorContent,false)) {
 
-                Y.all('#mlang_'+this._currentLanguageCode).each(function(languageNode){ 
+                this.editor.all('#mlang_'+this._currentLanguageCode).each(function(languageNode){ 
                     languageNode.remove(true);
                 }, this)
-                Y.one('#fablib_contentwrapper').append(data);
+                this.editor.one('#fablib_contentwrapper').append(data);
             } else {
                 data = this._prependAndAppendContentWrapper(data);
                 this.get('host').insertContentAtFocusPoint(data);
@@ -1731,16 +1798,17 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
 
     _appendParagraph: function (data, text, category, id) {
         var html = data;
-
-        var paragraphtemplate = Y.Handlebars.compile(PARAGRAPHTEMPLATE);
-        var paragraphHtml = paragraphtemplate({
-            text: text,
-            category: category,
-            id: id,
-            lang: this._currentLanguageCode
-        });
-
-        html = html + paragraphHtml;
+        if(text != ''){
+            var paragraphtemplate = Y.Handlebars.compile(PARAGRAPHTEMPLATE);
+            var paragraphHtml = paragraphtemplate({
+                text: text,
+                category: category,
+                id: id,
+                lang: this._currentLanguageCode
+            });
+    
+            html = html + paragraphHtml;
+        }
         return html;
     },
 
@@ -1962,13 +2030,20 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
     },
 
 
-    _appendDuration: function(data) {
-        var languageCode = this._attoform.one('#language').get('value');
+    _appendDuration: function() {
         var duration = this._attoform.one('#duration').get('value');
-        var text = M.util.get_string(duration+'_'+languageCode, COMPONENTNAME);
-        var newData = this._appendParagraph(data, text, 'duration', duration);
 
-        return newData;
+        if(duration != ''){
+            var data = this._appendTitle('', 'duration');
+            var languageCode = this._attoform.one('#language').get('value');
+    
+            var text = M.util.get_string(duration+'_'+languageCode, COMPONENTNAME);
+            var newData = this._appendParagraph(data, text, 'duration', duration);
+    
+            return newData;
+        } else {
+            return '';
+        }
     },
 
     _setDuration: function() {
@@ -1983,13 +2058,19 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
 
     },
 
-    _appendDifficulty: function(data) {
-        var languageCode = this._attoform.one('#language').get('value');
+    _appendDifficulty: function() {
         var difficulty = this._attoform.one('#difficulty').get('value');
-        var text = M.util.get_string(difficulty+'_'+languageCode, COMPONENTNAME);
-        var newData = this._appendParagraph(data, text, 'difficulty', difficulty);
 
-        return newData;
+        if(difficulty != ''){
+            var data = this._appendTitle('', 'difficulty');
+            var languageCode = this._attoform.one('#language').get('value');
+            var text = M.util.get_string(difficulty+'_'+languageCode, COMPONENTNAME);
+            var newData = this._appendParagraph(data, text, 'difficulty', difficulty);
+    
+            return newData;
+        } else {
+            return '';
+        }
     },
 
     _setDifficulty: function() {
@@ -2003,7 +2084,9 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
         }
     },
 
-    _appendMachines: function (data) {
+    _appendMachines: function () {
+        var data = this._appendTitle('', 'machines');
+
         var html = data;
 
         var listpretemplate = Y.Handlebars.compile(LISTPRETEMPLATE);
@@ -2054,36 +2137,42 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
         }
     },
 
-    _appendMaterials: function (data) {
-        var html = data;
-
-        var listpretemplate = Y.Handlebars.compile(LISTPRETEMPLATE);
-        var listpre = listpretemplate({});
-        html = html + listpre;
-
+    _appendMaterials: function () {
         var materialsRaw = this._attoform.one('#materialsTextArea').get('value');
-        var materialsList = materialsRaw.split(';');
 
-        for (var i = 0; i < materialsList.length; i++) {
-            var materialItem = materialsList[i].trim();
-            if(materialItem != ''){
-                var itemtemplate = Y.Handlebars.compile(ITEMTEMPLATE);
-                var itemhtml = itemtemplate({
-                    item: materialItem,
-                    id: '',
-                    category: 'materials',
-                    lang: this._currentLanguageCode
-                });
+        if(materialsRaw != ''){
+            var data  = this._appendTitle('', 'materials');
+            var html = data;
 
-                html = html + itemhtml;
+            var listpretemplate = Y.Handlebars.compile(LISTPRETEMPLATE);
+            var listpre = listpretemplate({});
+            html = html + listpre;
+
+            var materialsList = materialsRaw.split(';');
+
+            for (var i = 0; i < materialsList.length; i++) {
+                var materialItem = materialsList[i].trim();
+                if(materialItem != ''){
+                    var itemtemplate = Y.Handlebars.compile(ITEMTEMPLATE);
+                    var itemhtml = itemtemplate({
+                        item: materialItem,
+                        id: '',
+                        category: 'materials',
+                        lang: this._currentLanguageCode
+                    });
+
+                    html = html + itemhtml;
+                }
             }
-        }
 
-        var listposttemplate = Y.Handlebars.compile(LISTPOSTTEMPLATE);
-        var listpost = listposttemplate({ });
-        html = html + listpost;
+            var listposttemplate = Y.Handlebars.compile(LISTPOSTTEMPLATE);
+            var listpost = listposttemplate({ });
+            html = html + listpost;
 
-        return html;
+            return html;
+        } else {
+            return '';
+        }   
     },
 
     _setMaterials: function() {
@@ -2108,89 +2197,103 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
     },
 
     _appendFiles: function (data) {
-        var html = data;
+        if(this._numberOfFiles >= 1 && Y.one('#fileNameTextArea-1').get('value') != ''){
+            var data = this._appendTitle('', 'files');
+            var html = data;
 
-        var listpretemplate = Y.Handlebars.compile(LISTPRETEMPLATE);
-        var listpre = listpretemplate({});
-        html = html + listpre;
+            var listpretemplate = Y.Handlebars.compile(LISTPRETEMPLATE);
+            var listpre = listpretemplate({});
+            html = html + listpre;
 
-        var filesRaw = this._attoform.one('#filesTextArea').get('value');
-        var filesList = filesRaw.split(';');
-
-        for (var i = 0; i < filesList.length; i++) {
-            var filesItem = filesList[i].trim();
-            if(filesItem != ''){
-                var itemtemplate = Y.Handlebars.compile(ITEMTEMPLATE);
-                var itemhtml = itemtemplate({
-                    item: filesItem,
-                    id: '',
-                    category: 'files',
-                    lang: this._currentLanguageCode
-                });
-
-                html = html + itemhtml;
+            for(var i = 1; i <= this._numberOfFiles; i++){
+                var fileName = Y.one('#fileNameTextArea-'+i).get('value');
+                var fileUrl = this._attoform.one('#fileUrlTextArea-'+i).get('value');
+                
+                if(fileName && fileUrl){
+                    if(fileName != '' && fileUrl != ''){
+                        var hyperlinktemplate = Y.Handlebars.compile(HYPERLINKITEMTEMPLATE);
+                        var fileItemHyperlink =  hyperlinktemplate({
+                            link: fileUrl,
+                            text: fileName,
+                            category: 'files',
+                            id: '',
+                            lang: this._currentLanguageCode
+                        });
+        
+                    html = html + fileItemHyperlink;
+                    }
+                }
             }
+
+            var listposttemplate = Y.Handlebars.compile(LISTPOSTTEMPLATE);
+            var listpost = listposttemplate({ });
+            html = html + listpost;
+
+            return html;
+        } else {
+            return '';
         }
-
-        var listposttemplate = Y.Handlebars.compile(LISTPOSTTEMPLATE);
-        var listpost = listposttemplate({ });
-        html = html + listpost;
-
-        return html;
+        
     },
 
     _setFiles: function() {
-        var fileNodes = this.editor.all('li[data-category="files"]').filter(this._currentLanguageSelector);
+        this._numberOfFiles = 0;
+        var fileNodes = this._attoform.all('.fablib-file-item').each(function(item){
+            item.remove(true);
+        });
+        
+        var fileNodes = this.editor.all('a[data-category="files"]').filter(this._currentLanguageSelector);
         
         if(fileNodes && fileNodes.size()){
-            var filesTextArea = '';
-
+            
             fileNodes.each(function(item) {
-                var file = item.getHTML();
-                filesTextArea = filesTextArea + file + '; ';
-            });
-
-            if(filesTextArea.endsWith(';')){
-                filesTextArea.slice(0,filesTextArea.length-1);
-            }
-
-            this._attoform.one('#filesTextArea').set('value', filesTextArea);
-        } else {
-            this._attoform.one('#filesTextArea').set('value', '');
-        }
+                
+                var fileName = item.getHTML();
+                var fileUrl = item.get('href');
+                this._addFile(CSS, COMPONENTNAME, fileName, fileUrl);
+            },this);
+        } 
     },
 
-    _appendCredits: function (data) {
-        var html = data;
-
-        var listpretemplate = Y.Handlebars.compile(LISTPRETEMPLATE);
-        var listpre = listpretemplate({});
-        html = html + listpre;
-
+    _appendCredits: function () {
         var creditsRaw = this._attoform.one('#creditsTextArea').get('value');
-        var creditsList = creditsRaw.split(';');
 
-        for (var i = 0; i < creditsList.length; i++) {
-            var creditsItem = creditsList[i].trim();
-            if(creditsItem != ''){
-                var hyperlinktemplate = Y.Handlebars.compile(HYPERLINKITEMTEMPLATE);
-                var creditsItemHyperlink =  hyperlinktemplate({
-                    link: creditsItem,
-                    text: creditsItem,
-                    category: 'credits',
-                    id: '',
-                    lang: this._currentLanguageCode
-                });
+        if(creditsRaw != ''){
+            var data = this._appendTitle('', 'credits');
+            var html = data;
     
-                html = html + creditsItemHyperlink;
+            var listpretemplate = Y.Handlebars.compile(LISTPRETEMPLATE);
+            var listpre = listpretemplate({});
+            html = html + listpre;
+    
+    
+            var creditsList = creditsRaw.split(';');
+    
+            for (var i = 0; i < creditsList.length; i++) {
+                var creditsItem = creditsList[i].trim();
+                if(creditsItem != ''){
+                    var hyperlinktemplate = Y.Handlebars.compile(HYPERLINKITEMTEMPLATE);
+                    var creditsItemHyperlink =  hyperlinktemplate({
+                        link: creditsItem,
+                        text: creditsItem,
+                        category: 'credits',
+                        id: '',
+                        lang: this._currentLanguageCode
+                    });
+        
+                    html = html + creditsItemHyperlink;
+                }
             }
+    
+            var listposttemplate = Y.Handlebars.compile(LISTPOSTTEMPLATE);
+            var listpost = listposttemplate({ });
+            html = html + listpost;
+    
+            return html;
+        } else {
+            return '';
         }
 
-        var listposttemplate = Y.Handlebars.compile(LISTPOSTTEMPLATE);
-        var listpost = listposttemplate({ });
-        html = html + listpost;
-
-        return html;
     },
 
     _setCredits: function() {
@@ -2218,9 +2321,14 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
     _appendIntroduction: function(data) {
         var introduction = this._attoform.one('#introductionTextArea').get('value');
 
-        var newData = this._appendParagraph(data, introduction, 'introduction', '');
-
-        return newData;
+        if(introduction != ''){
+            var data = this._appendTitle('', 'introduction');
+            var newData = this._appendParagraph(data, introduction, 'introduction', '');
+    
+            return newData;
+        } else {
+            return '';
+        }
     },
 
     _setIntroduction: function() {
@@ -2234,36 +2342,44 @@ Y.namespace('M.atto_fablib').Button = Y.Base.create('button', Y.M.editor_atto.Ed
         }
     },
 
-    _appendSafety: function (data) {
-        var html = data;
-
-        var listpretemplate = Y.Handlebars.compile(LISTPRETEMPLATE);
-        var listpre = listpretemplate({});
-        html = html + listpre;
-
+    _appendSafety: function () {
         var safetyRaw = this._attoform.one('#safetyTextArea').get('value');
-        var safetyList = safetyRaw.split(';');
 
-        for (var i = 0; i < safetyList.length; i++) {
-            var safetyItem = safetyList[i].trim();
-            if(safetyItem != ''){
-                var itemtemplate = Y.Handlebars.compile(ITEMTEMPLATE);
-                var itemhtml = itemtemplate({
-                    item: safetyItem,
-                    category: 'safety',
-                    id: '',
-                    lang: this._currentLanguageCode
-                });
+        if(safetyRaw != ''){
+            var data = this._appendTitle('', 'safety');
+            var html = data;
 
-                html = html + itemhtml;
+            var listpretemplate = Y.Handlebars.compile(LISTPRETEMPLATE);
+            var listpre = listpretemplate({});
+            html = html + listpre;
+
+
+            var safetyList = safetyRaw.split(';');
+
+            for (var i = 0; i < safetyList.length; i++) {
+                var safetyItem = safetyList[i].trim();
+                if(safetyItem != ''){
+                    var itemtemplate = Y.Handlebars.compile(ITEMTEMPLATE);
+                    var itemhtml = itemtemplate({
+                        item: safetyItem,
+                        category: 'safety',
+                        id: '',
+                        lang: this._currentLanguageCode
+                    });
+
+                    html = html + itemhtml;
+                }
             }
+
+            var listposttemplate = Y.Handlebars.compile(LISTPOSTTEMPLATE);
+            var listpost = listposttemplate({ });
+            html = html + listpost;
+
+            return html;
+        } else {
+            return '';
         }
-
-        var listposttemplate = Y.Handlebars.compile(LISTPOSTTEMPLATE);
-        var listpost = listposttemplate({ });
-        html = html + listpost;
-
-        return html;
+        
     },
 
     _setSafety: function() {

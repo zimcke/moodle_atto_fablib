@@ -138,7 +138,8 @@ function atto_fablib_strings_for_js() {
         'files_EN',
         'files_NL',
         'help_files',
-        'example_files',
+        'help_files_url',
+        'addfile',
         
         'introduction',
         'introduction_EN',

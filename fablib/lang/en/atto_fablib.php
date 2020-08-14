@@ -140,8 +140,9 @@ $string['files'] = 'Files';
 $string['files_EN'] = 'Files';
 $string['files_NL'] = 'Bestanden';
 
-$string['help_files'] = 'List all used files seperated by a semicolon in the format below (hyperlinks can be added later):';
-$string['example_files'] = 'Example: File description 1: name.extension; File description 2: name.extension';
+$string['help_files'] = 'File name';
+$string['addfile'] = 'Add another file';
+$string['help_files_url'] = 'File URL';
 
 $string['introduction'] = 'Introduction';
 $string['introduction_EN'] = 'Introduction';

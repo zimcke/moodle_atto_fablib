@@ -140,8 +140,9 @@ $string['files'] = 'Bestanden';
 $string['files_EN'] = 'Files';
 $string['files_NL'] = 'Bestanden';
 
-$string['help_files'] = 'Lijst alle gebruikte bestanden op, gescheiden oor een puntkomma en in het formaat dat hieronder getoond wordt (hyperlinks om te downloaden kunnen achteraf toegevoegd worden):';
-$string['example_files'] = 'Voorbeeld: Bestandsbeschrijving 1: naam.extensie; File description 2: naam.extensie';
+$string['help_files'] = 'Bestandsnaam';
+$string['addfile'] = 'Voeg nog een bestand toe';
+$string['help_files_url'] = 'Bestand URL';
 
 $string['introduction'] = 'Introductie';
 $string['introduction_EN'] = 'Introduction';
